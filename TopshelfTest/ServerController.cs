@@ -54,6 +54,16 @@ namespace TopshelfTest
                 Method = HttpMethod.Get,
                 SubUri = "hello"
             });
+            Server.AddRequestProcessor(new RequestProcessor<object>
+            {
+                AuthorizationRequired = false,
+                Handler = (account, request) =>
+                {
+                    throw new NotImplementedException();
+                },
+                Method = HttpMethod.Get,
+                SubUri = "error"
+            });
         }
 
         private ServerConfiguration GetConfig() => new ServerConfiguration

@@ -24,7 +24,14 @@ namespace TopshelfTest
                                       
                 x.SetDescription("Sample Topshelf Host");        
                 x.SetDisplayName("Topshelf test");                       
-                x.SetServiceName("Topshelf test");                       
+                x.SetServiceName("Topshelf test");
+
+                x.EnableServiceRecovery(configurator =>
+                {
+                    configurator.RestartService(0);
+                });
+
+                x.OnException(exception => Logger.LogException("ERROR", LogLevel.Error, exception));
             });
         }
 

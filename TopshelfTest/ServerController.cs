@@ -14,32 +14,35 @@ using ITCC.HTTP.Server.Files;
 using ITCC.HTTP.SslConfigUtil.Core.Enums;
 using ITCC.Logging.Core;
 using Newtonsoft.Json;
+using Topshelf;
 using Server = ITCC.HTTP.Server.Core.StaticServer<object>;
 using ServerConfiguration = ITCC.HTTP.Server.Core.HttpServerConfiguration<object>;
 
 namespace TopshelfTest
 {
-    internal class ServerController
+    internal class ServerController : ServiceControl
     {
         #region public
 
-        public void Start()
+        public bool Start(HostControl hostControl)
         {
             var config = GetConfig();
             var startStatus = Server.Start(config);
             if (startStatus != ServerStartStatus.Ok)
             {
                 Logger.LogEntry("START", LogLevel.Error, $"Error starting server: {startStatus}");
-                return;
+                return false;
             }
             RegisterHandlers();
             Logger.LogEntry("START", LogLevel.Info, "Server started");
+            return true;
         }
 
-        public void Stop()
+        public bool Stop(HostControl hostControl)
         {
             Server.Stop();
             Logger.LogEntry("START", LogLevel.Info, "Server stopped");
+            return true;
         }
         #endregion
 

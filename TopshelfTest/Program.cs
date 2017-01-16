@@ -20,7 +20,9 @@ namespace TopshelfTest
                     s.WhenStarted(controller => controller.Start());              
                     s.WhenStopped(controller => controller.Stop());               
                 });
-                x.RunAsLocalSystem();      
+                x.RunAsLocalSystem();
+
+                x.StartAutomatically();
                                       
                 x.SetDescription("Sample Topshelf Host");        
                 x.SetDisplayName("Topshelf test");                       

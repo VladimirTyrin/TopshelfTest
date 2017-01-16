@@ -10,6 +10,7 @@ using System.Xml.Serialization;
 using ITCC.HTTP.Common.Enums;
 using ITCC.HTTP.Server.Core;
 using ITCC.HTTP.Server.Enums;
+using ITCC.HTTP.Server.Files;
 using ITCC.HTTP.SslConfigUtil.Core.Enums;
 using ITCC.Logging.Core;
 using Newtonsoft.Json;
@@ -31,6 +32,7 @@ namespace TopshelfTest
                 Logger.LogEntry("START", LogLevel.Error, $"Error starting server: {startStatus}");
                 return;
             }
+            RegisterHandlers();
             Logger.LogEntry("START", LogLevel.Info, "Server started");
         }
 
@@ -69,37 +71,61 @@ namespace TopshelfTest
             ServerName = "ITCC Test",
             StatisticsEnabled = true,
             SubjectName = "localhost",
-            BodyEncoders = new List<BodyEncoder>
+            FilesEnabled = true,
+            FilesNeedAuthorization = false,
+            FilesBaseUri = "files",
+            FileSections = new List<FileSection>
+            {
+                new FileSection
                 {
-                    new BodyEncoder
+                    Folder = "Test",
+                    MaxFileSize = -1,
+                    Name = "Test"
+                }
+            },
+            FilesLocation = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "\\Pictures",
+            FilesPreprocessingEnabled = false,
+            FilesCompressionEnabled = false,
+            FilesPreprocessorThreads = -1,
+            BodyEncoders = new List<BodyEncoder>
+            {
+                new BodyEncoder
+                {
+                    AutoGzipCompression = true,
+                    ContentType = "application/xml",
+                    Encoding = Encoding.UTF8,
+                    Serializer = o =>
                     {
-                        AutoGzipCompression = true,
-                        ContentType = "application/xml",
-                        Encoding = Encoding.UTF8,
-                        Serializer = o =>
+                        using (var stringWriter = new StringWriter())
                         {
-                            using (var stringWriter = new StringWriter())
+                            using (var xmlWriter = XmlWriter.Create(stringWriter))
                             {
-                                using (var xmlWriter = XmlWriter.Create(stringWriter))
-                                {
-                                    var xmlSerializer = new XmlSerializer(o.GetType());
-                                    xmlSerializer.Serialize(xmlWriter, o);
-                                }
-                                return stringWriter.ToString();
+                                var xmlSerializer = new XmlSerializer(o.GetType());
+                                xmlSerializer.Serialize(xmlWriter, o);
                             }
-                        },
-                        IsDefault = false
+                            return stringWriter.ToString();
+                        }
                     },
-                    new BodyEncoder
-                    {
-                        AutoGzipCompression = true,
-                        ContentType = "application/json",
-                        Encoding = Encoding.UTF8,
-                        Serializer = o => JsonConvert.SerializeObject(o,
-                            new JsonSerializerSettings {ReferenceLoopHandling = ReferenceLoopHandling.Serialize}),
-                        IsDefault = true
-                    }
+                    IsDefault = false
                 },
+                new BodyEncoder
+                {
+                    AutoGzipCompression = true,
+                    ContentType = "application/json",
+                    Encoding = Encoding.UTF8,
+                    Serializer = o => JsonConvert.SerializeObject(o,
+                        new JsonSerializerSettings {ReferenceLoopHandling = ReferenceLoopHandling.Serialize}),
+                    IsDefault = true
+                },
+                new BodyEncoder
+                {
+                    AutoGzipCompression = false,
+                    ContentType = "text/plain",
+                    Encoding = Encoding.UTF8,
+                    Serializer = o => o.ToString(),
+                    IsDefault = false
+                }
+            },
             CriticalMemoryValue = 1024
         };
 
